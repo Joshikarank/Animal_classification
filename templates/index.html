@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Classification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Animal Classification</h1>
+        <p>Upload an image to predict the animal species!</p>
+    </header>
+
+    <div class="container">
+        <form id="uploadForm">
+            <div class="form-container">
+                <input type="file" name="file" id="fileInput" accept="image/*" required>
+                <button type="submit" id="predictButton">Predict Animal</button>
+            </div>
+        </form>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Analyzing image...</p>
+        </div>
+
+        <div id="result" class="result hidden">
+            <img id="uploadedImage" src="" alt="Uploaded Animal Image">
+            <h2 id="animalName"></h2>
+            <p id="confidence"></p>
+            <button id="resetButton">Predict Another</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>Made by Joshikaran ❤️</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const result = document.getElementById('result');
+        const loading = document.getElementById('loading');
+        const fileInput = document.getElementById('fileInput');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const animalName = document.getElementById('animalName');
+        const confidence = document.getElementById('confidence');
+        const resetButton = document.getElementById('resetButton');
+        const predictButton = document.getElementById('predictButton');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please upload an image file.");
+                return;
+            }
+
+            result.classList.add('hidden');
+            loading.classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            uploadedImage.src = URL.createObjectURL(file);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const resultData = await response.json();
+                    animalName.textContent = resultData.animal;
+                    confidence.textContent = `Confidence: ${resultData.confidence}%`;
+
+                    loading.classList.add('hidden');
+                    result.classList.remove('hidden');
+                } else {
+                    throw new Error('Prediction failed.');
+                }
+
+            } catch (error) {
+                alert("Error in prediction. Please try again.");
+                loading.classList.add('hidden');
+            }
+        });
+
+        resetButton.addEventListener('click', () => {
+            form.reset();
+            result.classList.add('hidden');
+            loading.classList.add('hidden');
+            fileInput.value = null;
+        });
+    </script>
+</body>
+</html>
